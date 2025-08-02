@@ -39,7 +39,7 @@ import datetime
 
 # Notification Settings
 # Replace "your-secret-topic-name" with the topic you subscribed to in the ntfy app.
-NTFY_TOPIC = "forex-trade-alerts-aug2025"
+NTFY_TOPIC = "carlos-fx-alerts-1066"
 
 # Trade Parameters for USD/CAD
 USDCAD_TICKER = "CAD=X"
@@ -82,12 +82,12 @@ def check_usdcad_breakout(already_triggered):
 
     try:
         # Fetch the last few minutes of data to check the most recent price
-        data = yf.download(USDCAD_TICKER, period="1d", interval="1m")
+        data = yf.download(USDCAD_TICKER, period="1d", interval="1m", auto_adjust=True, progress=False)
         if data.empty:
             print(f"[{datetime.datetime.now()}] No data for USD/CAD, skipping check.")
             return False
 
-        last_price = data['Close'].iloc[-1]
+        last_price = data['Close'].iloc[-1].item()
         print(f"[{datetime.datetime.now()}] Checking USD/CAD: Last Price = {last_price:.4f}, Trigger = {USDCAD_ENTRY_TRIGGER:.4f}")
 
         if last_price > USDCAD_ENTRY_TRIGGER:

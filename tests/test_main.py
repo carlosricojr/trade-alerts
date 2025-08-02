@@ -1,5 +1,3 @@
-# tests/test_main.py
-#
 # This file contains the test suite for the Forex Trade Alerter script.
 # It uses pytest and the pytest-mock plugin to test the application's logic
 # in a controlled environment, without making real network requests or
@@ -57,7 +55,7 @@ def test_check_usdcad_breakout_below_trigger(mock_yf_download, mock_send_notific
 
     # Assert
     assert result is False, "Should return False as the trigger condition is not met."
-    mock_yf_download.assert_called_once_with(main.USDCAD_TICKER, period="1d", interval="1m")
+    mock_yf_download.assert_called_once_with(main.USDCAD_TICKER, period="1d", interval="1m", auto_adjust=True, progress=False)
     mock_send_notification.assert_not_called()
 
 @patch('src.main.send_notification')
@@ -78,7 +76,7 @@ def test_check_usdcad_breakout_above_trigger(mock_yf_download, mock_send_notific
 
     # Assert
     assert result is True, "Should return True as the trigger condition is met."
-    mock_yf_download.assert_called_once_with(main.USDCAD_TICKER, period="1d", interval="1m")
+    mock_yf_download.assert_called_once_with(main.USDCAD_TICKER, period="1d", interval="1m", auto_adjust=True, progress=False)
     mock_send_notification.assert_called_once()
 
 @patch('src.main.send_notification')
@@ -98,16 +96,17 @@ def test_check_usdcad_breakout_no_data(mock_yf_download, mock_send_notification)
     assert result is False, "Should return False when no data is available."
     mock_send_notification.assert_not_called()
 
-@patch('src.main.datetime', MagicMock())
 @patch('src.main.send_notification')
-def test_check_boe_announcement_before_alert_time(mock_send_notification):
+@patch('src.main.datetime')
+def test_check_boe_announcement_before_alert_time(mock_datetime, mock_send_notification):
     """
     Tests the BoE check when the current time is BEFORE the alert window.
     It should NOT send a notification.
     """
     # Arrange
     # Set the mocked "now" to be well before the announcement
-    main.datetime.datetime.now.return_value = MOCK_NOW
+    mock_datetime.datetime.now.return_value = MOCK_NOW
+    mock_datetime.timedelta = datetime.timedelta
     
     # Act
     result = main.check_boe_announcement(already_triggered=False)
@@ -116,9 +115,9 @@ def test_check_boe_announcement_before_alert_time(mock_send_notification):
     assert result is False, "Should return False as it's not time yet."
     mock_send_notification.assert_not_called()
 
-@patch('src.main.datetime', MagicMock())
 @patch('src.main.send_notification')
-def test_check_boe_announcement_within_alert_time(mock_send_notification):
+@patch('src.main.datetime')
+def test_check_boe_announcement_within_alert_time(mock_datetime, mock_send_notification):
     """
     Tests the BoE check when the current time is WITHIN the alert window.
     It SHOULD send a notification.
@@ -126,7 +125,8 @@ def test_check_boe_announcement_within_alert_time(mock_send_notification):
     # Arrange
     # Set the mocked "now" to be inside the 5-minute alert window
     alert_time = main.BOE_ANNOUNCEMENT_UTC - datetime.timedelta(minutes=4)
-    main.datetime.datetime.now.return_value = alert_time
+    mock_datetime.datetime.now.return_value = alert_time
+    mock_datetime.timedelta = datetime.timedelta
 
     # Act
     result = main.check_boe_announcement(already_triggered=False)
