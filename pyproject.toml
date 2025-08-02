@@ -7,3 +7,9 @@ dependencies = [
     "requests>=2.32.4",
     "yfinance>=0.2.65",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-mock>=3.14.1",
+]
